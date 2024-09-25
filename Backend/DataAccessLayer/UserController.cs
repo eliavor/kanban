@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using MySql.Data;
+using MySql.Data.MySqlClient;
 
 internal class UserController
 {
@@ -13,12 +15,10 @@ internal class UserController
         // Get the base directory of the tests project
         string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-        // Adjust the relative path to move from the tests bin directory to the actual database location
-        string path = Path.GetFullPath(Path.Combine(
-         Directory.GetCurrentDirectory(), "kanban.db"));
+
 
         // Set the connection string
-        _connectionString = $"Data Source={path};Version=3;";
+        _connectionString = "Server=kanban.c3wqw4y2yjiu.eu-north-1.rds.amazonaws.com;Database=Kanban;User ID=admin;Password=Oreliav2005;"; 
     }
 
     // Method to select users based on given criteria
@@ -30,10 +30,10 @@ internal class UserController
         {
             int boardId = (int)criteria["BoardId"];
             string query1 = "SELECT * FROM UserBoard WHERE BoardId=@BoardId";
-            using (var connection = new SQLiteConnection(_connectionString))
+            using (MySqlConnection connection = new MySqlConnection(_connectionString))
             {
                 connection.Open();
-                using (var command = new SQLiteCommand(query1, connection))
+                using (MySqlCommand command = new MySqlCommand(query1, connection))
                 {
                     command.Parameters.AddWithValue("@BoardId", boardId);
                     using (var reader = command.ExecuteReader())
@@ -63,20 +63,20 @@ internal class UserController
             query = "SELECT * FROM User WHERE ";
         }
             List<string> conditions = new List<string>();
-        List<SQLiteParameter> parameters = new List<SQLiteParameter>();
+        List<MySqlParameter> parameters = new List<MySqlParameter>();
 
         foreach (var criterion in criteria)
         {
             conditions.Add($"{criterion.Key} = @{criterion.Key}");
-            parameters.Add(new SQLiteParameter($"@{criterion.Key}", criterion.Value));
+            parameters.Add(new MySqlParameter($"@{criterion.Key}", criterion.Value));
         }
 
         query += string.Join(" AND ", conditions);
 
-        using (var connection1 = new SQLiteConnection(_connectionString))
+        using (var connection1 = new MySqlConnection(_connectionString))
         {
             connection1.Open();
-            using (var command = new SQLiteCommand(query, connection1))
+            using (var command = new MySqlCommand(query, connection1))
             {
                 command.Parameters.AddRange(parameters.ToArray());
                 using (var reader = command.ExecuteReader())
@@ -110,20 +110,20 @@ internal class UserController
         }
 
         string query = "DELETE FROM User WHERE Email = @Email";
-        using (var connection = new SQLiteConnection(_connectionString))
+        using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new SQLiteCommand(query, connection))
+            using (var command = new MySqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Email", email);
                 command.ExecuteNonQuery();
             }
         }
         string query2 = "DELETE FROM UserBoard WHERE Email = @Email";
-        using (var connection = new SQLiteConnection(_connectionString))
+        using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new SQLiteCommand(query, connection))
+            using (var command = new MySqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Email", email);
                 command.ExecuteNonQuery();
@@ -141,10 +141,10 @@ internal class UserController
         string query = @"INSERT INTO User (Email, Password) 
                          VALUES (@Email, @Password)";
 
-        using (var connection = new SQLiteConnection(_connectionString))
+        using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new SQLiteCommand(query, connection))
+            using (var command = new MySqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Email", user.Email);
                 command.Parameters.AddWithValue("@Password", user.Password);
@@ -158,10 +158,10 @@ internal class UserController
     internal UserDAO Update(string email, string newPassword)
     {
         string query = "UPDATE User SET Password = @Password WHERE Email = @Email";
-        using (var connection = new SQLiteConnection(_connectionString))
+        using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new SQLiteCommand(query, connection))
+            using (var command = new MySqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Password", newPassword);
                 command.Parameters.AddWithValue("@Email", email);
@@ -175,10 +175,10 @@ internal class UserController
     {
         UserDAO user = null;
         string query = "SELECT * FROM User WHERE Email = @Email";
-        using (var connection = new SQLiteConnection(_connectionString))
+        using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new SQLiteCommand(query, connection))
+            using (var command = new MySqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@Email", email);
                 using (var reader = command.ExecuteReader())
@@ -195,10 +195,10 @@ internal class UserController
     internal void DeleteAll()
     {
         string query = "DELETE FROM User";
-        using (var connection = new SQLiteConnection(_connectionString))
+        using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new SQLiteCommand(query, connection))
+            using (var command = new MySqlCommand(query, connection))
             {
                 try { command.ExecuteNonQuery(); }
                 catch (Exception ex) { }

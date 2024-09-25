@@ -232,6 +232,8 @@ namespace BoardServiceTests
             string description = "Sample Task Description";
             DateTime dueDate = DateTime.Now.AddDays(7);
 
+            serviceFactory.DeleteData();
+
             // Register a valid user and create a board
             serviceFactory.US.Register(validEmail, "Valid1Password!");
             serviceFactory.BS.CreateBoard(validEmail, boardName1);
@@ -1622,10 +1624,13 @@ namespace BoardServiceTests
         {
             main test = new main();
             log4net.Config.XmlConfigurator.Configure();
+
+            test.AddTaskTest();
+
             test.CreateBoardTest();
             test.DeleteBoardTest();
             test.LimitColumnTest();
-            test.AddTaskTest();
+            
             test.AdvanceTaskTest();
             test.InProgressTasksTest();
             test.GetColumnLimitTest();
