@@ -529,3 +529,4 @@ FodyWeavers.xsd
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,csharp
 *.v2
 .vs/Kanban/v17/.suo
+kanban.db-journal
