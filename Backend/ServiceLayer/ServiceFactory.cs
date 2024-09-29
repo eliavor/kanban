@@ -23,6 +23,7 @@ namespace KanBan_2024.ServiceLayer
             BS = new BoardService(a);
             TS = new TaskService(BS.BF);
             startLog();
+            LoadData();
         }
         public static void startLog()
         {
