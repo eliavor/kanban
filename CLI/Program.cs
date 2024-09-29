@@ -30,7 +30,12 @@ namespace CLI
                         break;
 
                     case "2":
-                        Console.WriteLine("2");
+                        Console.WriteLine("Enter Email: ");
+                        string loginEmail = Console.ReadLine();
+                        Console.WriteLine("Enter Password: ");
+                        string loginPassword = Console.ReadLine();
+
+                        Console.WriteLine(SF.US.Login(loginEmail, loginPassword));
                         break;
                 }
             }
