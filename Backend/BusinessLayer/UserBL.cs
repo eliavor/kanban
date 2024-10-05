@@ -12,6 +12,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         internal string UserEmail { get; set; }
         internal bool LoggedIn {  get; set; }
         internal UserDAO userDAO {  get; set; }
+        public string JWT { get; set; } = "";
         internal UserBL(string password, string userEmail)
         {
             userDAO = new UserDAO(userEmail, password);

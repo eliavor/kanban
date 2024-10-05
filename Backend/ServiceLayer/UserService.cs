@@ -53,7 +53,7 @@ namespace KanBan_2024.ServiceLayer
             try
             {
                 UserBL user = UF.Login(email, password);
-                Response response = new Response(new UserSL(user.UserEmail), null);
+                Response response = new Response(new UserSL(user.UserEmail, user.JWT), null);
                 return JsonSerializer.Serialize(response);
             }
             catch(Exception ex)
@@ -66,11 +66,11 @@ namespace KanBan_2024.ServiceLayer
         /// </summary>
         /// <param name="email">The email of the user to log out</param>
         /// <returns>An empty response, unless an error occurs (see <see cref="GradingService"/>)</returns>
-        public string Logout(string email)
+        public string Logout(string email,string JWT)
         {
             try
             {
-                UF.Logout(email);
+                UF.Logout(email, JWT);
                 Response response = new Response(null, null);
                 return JsonSerializer.Serialize(response);
             }

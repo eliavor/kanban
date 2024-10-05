@@ -8,6 +8,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+
 
 namespace IntroSE.Kanban.Backend.BusinessLayer
 {
@@ -17,6 +21,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         private static Dictionary<string, UserBL> users;
         private UserController UC;
         private Authenticator a;
+        private static string secret = "my super secret key that is very secret and nobody knows it!";
 
         internal UserFacade(Authenticator a)
         {
@@ -48,6 +53,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
 
             // Create a new UserBL object and add it to users dictionary
             UserBL User = new UserBL(Password, Email);
+            User.JWT = GenerateToken(Email);
             users.Add(Email, User);
             a.SignIn(Email, User);
             log.Info($"User registered successfully with email: {Email}");
@@ -159,6 +165,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             }
 
             // Mark the user as logged in
+            user.JWT = GenerateToken(Email);
             users[Email].LoggedIn = true;
             a.SignIn(Email, user);
             log.Info($"User logged in successfully with email: {Email}");
@@ -182,8 +189,9 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         /// </summary>
         /// <param name="Email">The email address of the user to log out.</param>
         /// <exception cref="Exception">Thrown when no such user exists or the user is not logged in.</exception>
-        public void Logout(string Email)
+        public void Logout(string Email, string JWT)
         {
+
             log.Info($"Attempting to logout user with email: {Email}");
 
             // Check if the user exists
@@ -198,6 +206,11 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             {
                 log.Error($"Logout failed for user with email: {Email}. Reason: Not logged in.");
                 throw new Exception("Not logged in.");
+            }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"Logout failed because token is invalid for: {Email}");
+                throw new Exception("Invalid token.");
             }
 
             // Remove the user from the signedIn dictionary to log them out
@@ -233,6 +246,60 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         {
             UC.DeleteAll();
             users = new Dictionary<string, UserBL>();
+        }
+
+
+        public string GenerateToken(string username)
+        {
+            var claims = new[]
+{
+            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "kanbanserver.com",
+                audience: "kanbanapi.com",
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(30), 
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
+        public bool ValidateToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(secret);
+
+            try
+            {
+                // Validate the token and its claims
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = "kanbanserver.com",
+                    ValidateAudience = true,
+                    ValidAudience = "kanbanapi.com",
+                    ValidateLifetime = true, 
+                    ClockSkew = TimeSpan.Zero 
+                }, out SecurityToken validatedToken);
+
+               
+                return true;
+            }
+            catch
+            {      
+                return false;
+            }
         }
     }
 }

@@ -29,11 +29,11 @@ namespace KanBan_2024.ServiceLayer
         /// <param name="taskId">The task to be updated identified task ID</param>
         /// <param name="dueDate">The new due date of the column</param>
         /// <returns>A response with the updated taskSL, unless an error occurs (see <see cref="GradingService"/>)</returns>
-        public string UpdateTaskDueDate(string email, string boardName, int columnOrdinal, int taskId, DateTime dueDate)
+        public string UpdateTaskDueDate(string email, string boardName, int columnOrdinal, int taskId, DateTime dueDate, string JWT)
         {
             try
             {
-                TaskBL t = BF.UpdateTaskDueDate(email, taskId, dueDate, boardName, columnOrdinal);
+                TaskBL t = BF.UpdateTaskDueDate(email, taskId, dueDate, boardName, columnOrdinal, JWT);
                 Response response = new Response(new taskSL(t.ID, t.CreationTime, t.DueDate, t.Title, t.Description, t.Assignee), null);
                 return JsonSerializer.Serialize(response);
             }
@@ -52,11 +52,11 @@ namespace KanBan_2024.ServiceLayer
         /// <param name="taskId">The task to be updated identified task ID</param>
         /// <param name="description">New description for the task</param>
         /// <returns>A response with the updated taskSL, unless an error occurs (see <see cref="GradingService"/>)</returns>
-        public string UpdateTaskDescription(string email, string boardName, int columnOrdinal, int taskId, string description)
+        public string UpdateTaskDescription(string email, string boardName, int columnOrdinal, int taskId, string description, string JWT)
         {
             try
             {
-                TaskBL t = BF.UpdateTaskDescription(email, taskId, description, boardName, columnOrdinal);
+                TaskBL t = BF.UpdateTaskDescription(email, taskId, description, boardName, columnOrdinal, JWT);
                 Response response = new Response(new taskSL(t.ID, t.CreationTime, t.DueDate, t.Title, t.Description, t.Assignee),null);
                 return JsonSerializer.Serialize(response);
             }
@@ -75,11 +75,11 @@ namespace KanBan_2024.ServiceLayer
         /// <param name="taskId">The task to be updated identified task ID</param>
         /// <param name="title">New title for the task</param>
         /// <returns>A response with the updated taskSL, unless an error occurs (see <see cref="GradingService"/>)</returns>
-        public string UpdateTaskTitle(string email, string boardName, int columnOrdinal, int taskId, string title)
+        public string UpdateTaskTitle(string email, string boardName, int columnOrdinal, int taskId, string title, string JWT)
         {
             try
             {
-                TaskBL t = BF.UpdateTaskTitle(email, taskId, title, boardName, columnOrdinal);
+                TaskBL t = BF.UpdateTaskTitle(email, taskId, title, boardName, columnOrdinal, JWT);
                 Response response = new Response(new taskSL(t.ID, t.CreationTime, t.DueDate, t.Title, t.Description, t.Assignee), null);
                 return JsonSerializer.Serialize(response);
             }
@@ -93,11 +93,11 @@ namespace KanBan_2024.ServiceLayer
         /// </summary>
         /// <param name="email">Email of the user. Must be logged in</param>
         /// <returns>A response with a list of the in-progress tasks of the user, unless an error occurs (see <see cref="GradingService"/>)</returns>
-        public string InProgressTasks(string email)
+        public string InProgressTasks(string email, string JWT)
         {
             try
             {
-                List<taskSL> l = BF.InProgressTasks(email);
+                List<taskSL> l = BF.InProgressTasks(email, JWT);
                 Response response = new Response(l, null);
                 return JsonSerializer.Serialize(response);
             }
@@ -115,11 +115,11 @@ namespace KanBan_2024.ServiceLayer
         /// <param name="taskID">The task to be updated identified a task ID</param>        
         /// <param name="emailAssignee">Email of the asignee user</param>
         /// <returns>An empty response, unless an error occurs (see <see cref="GradingService"/>)</returns>
-        public string AssignTask(string email, string boardName, int columnOrdinal, int taskID, string emailAssignee)
+        public string AssignTask(string email, string boardName, int columnOrdinal, int taskID, string emailAssignee, string JWT)
         {
             try
             {
-                TaskBL task = BF.AssignTask(email, boardName, columnOrdinal, taskID, emailAssignee);
+                TaskBL task = BF.AssignTask(email, boardName, columnOrdinal, taskID, emailAssignee, JWT);
                 Response response = new Response(new taskSL(task), null);
                 return JsonSerializer.Serialize(response);
             }

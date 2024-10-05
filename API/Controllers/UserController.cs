@@ -35,7 +35,7 @@ namespace API.Controllers
         [HttpPost("logout")]
         public ActionResult Logout([FromBody] UserLogoutDto logoutDto)
         {
-            var response = _serviceFactory.US.Logout(logoutDto.Email);
+            var response = _serviceFactory.US.Logout(logoutDto.Email, logoutDto.JWT);
             return Content(response, "application/json");
         }
     }
@@ -50,10 +50,12 @@ namespace API.Controllers
     {
         public string Email { get; set; }
         public string Password { get; set; }
+       
     }
 
     public class UserLogoutDto
     {
         public string Email { get; set; }
+        public string JWT { get; set; }
     }
 }

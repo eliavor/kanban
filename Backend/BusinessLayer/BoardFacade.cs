@@ -1,9 +1,11 @@
 ﻿using KanBan_2024.ServiceLayer;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -21,6 +23,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         private int lastBoardID;
         private BoardController BC;
         private TaskController TC;
+        private static string secret = "my super secret key that is very secret and nobody knows it!";
 
         public BoardFacade(Authenticator a)
         {
@@ -46,7 +49,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         /// <param name="email">The email address of the user creating the board.</param>
         /// <returns>Returns the created BoardBL object.</returns>
         /// <exception cref="Exception">Thrown when the user does not exist, board name is null or empty, or board name already exists.</exception>
-        internal BoardBL CreateBoard(string BoardName, string email)
+        internal BoardBL CreateBoard(string BoardName, string email,string JWT)
         {
             log.Info($"Attempting to create board with name: {BoardName} for user: {email}");
 
@@ -56,7 +59,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"CreateBoard failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"CreateBoard failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Check if the board name is valid
             if (BoardName == null || BoardName.Length == 0)
             {
@@ -93,7 +101,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return b;
         }
 
-        public BoardBL DeleteBoard(string BoardName, string email)
+        public BoardBL DeleteBoard(string BoardName, string email, string JWT)
         {
             log.Info($"Attempting to delete board with name: {BoardName} for user: {email}");
 
@@ -103,7 +111,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"DeleteBoard failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"DeleteBoard failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board to delete
             BoardBL b = FindBoards(BoardName, email);
 
@@ -151,7 +164,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return b;
         }
 
-        public List<taskSL> InProgressTasks(string email)
+        public List<taskSL> InProgressTasks(string email, string JWT)
         {
             log.Info($"Attempting to get in-progress tasks for user: {email}");
 
@@ -161,7 +174,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"InProgressTasks failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"InProgressTasks failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Prepare a list to store in-progress tasks
             List<taskSL> tasks = new List<taskSL>();
             if (!boardsPerUser.ContainsKey(email)) return tasks;
@@ -224,7 +242,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return taskbl;
         }
 
-        public int GetColumnLimit(string email, string BoardName, int columnOrdinal)
+        public int GetColumnLimit(string email, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to get column limit for column: {columnOrdinal} on board: {BoardName} for user: {email}");
 
@@ -241,7 +259,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"GetColumnLimit failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"GetColumnLimit failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board
             BoardBL b = FindBoard(BoardName, boardsPerUser[email]);
             if (b == null)
@@ -255,7 +278,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return lim;
         }
 
-        public string GetColumnName(string email, string BoardName, int columnOrdinal)
+        public string GetColumnName(string email, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to get column name for column: {columnOrdinal} on board: {BoardName} for user: {email}");
 
@@ -272,7 +295,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"GetColumnName failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"GetColumnName failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board
             BoardBL b = FindBoard(BoardName, boardsPerUser[email]);
             if (b == null)
@@ -286,7 +314,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return name;
         }
 
-        public TaskBL UpdateTaskDueDate(string email, int taskid, DateTime dueDate, string BoardName, int columnOrdinal)
+        public TaskBL UpdateTaskDueDate(string email, int taskid, DateTime dueDate, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to update task due date for task: {taskid} on board: {BoardName} for user: {email}");
 
@@ -303,7 +331,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"UpdateTaskDueDate failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"UpdateTaskDueDate failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board
             BoardBL b = FindBoard(BoardName, boardsPerUser[email]);
             if (b == null)
@@ -341,7 +374,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return ans;
         }
 
-        public TaskBL UpdateTaskDescription(string email, int taskid, string description, string BoardName, int columnOrdinal)
+        public TaskBL UpdateTaskDescription(string email, int taskid, string description, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to update task description for task: {taskid} on board: {BoardName} for user: {email}");
 
@@ -351,7 +384,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"UpdateTaskDescription failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"UpdateTaskDescription failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board
             BoardBL b = FindBoard(BoardName, boardsPerUser[email]);
             if (b == null)
@@ -397,7 +435,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return ans;
         }
 
-        public TaskBL UpdateTaskTitle(string email, int taskid, string title, string BoardName, int columnOrdinal)
+        public TaskBL UpdateTaskTitle(string email, int taskid, string title, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to update task title for task: {taskid} on board: {BoardName} for user: {email}");
 
@@ -407,7 +445,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"UpdateTaskTitle failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"UpdateTaskTitle failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board
             BoardBL b = FindBoard(BoardName, boardsPerUser[email]);
             if (b == null)
@@ -468,7 +511,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return ans;
         }
 
-        public List<TaskBL> GetColumn(string email, string BoardName, int columnOrdinal)
+        public List<TaskBL> GetColumn(string email, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to get column: {columnOrdinal} on board: {BoardName} for user: {email}");
 
@@ -485,7 +528,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"GetColumn failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"GetColumn failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Find the board
             BoardBL b = FindBoard(BoardName, boardsPerUser[email]);
             if (b == null)
@@ -500,7 +548,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return taskBLs;
         }
 
-        public BoardBL AdvanceTask(string email, int taskid, string BoardName, int columnOrdinal)
+        public BoardBL AdvanceTask(string email, int taskid, string BoardName, int columnOrdinal, string JWT)
         {
             log.Info($"Attempting to advance task: {taskid} on board: {BoardName} for user: {email}");
 
@@ -510,7 +558,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"AdvanceTask failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"AdvanceTask failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Check if column ordinal is valid (0 to 1)
             if (columnOrdinal >= 2 || columnOrdinal < 0)
             {
@@ -550,7 +603,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return b;
         }
 
-        public TaskBL AddTask(string email, string BoardName, string title, string description, DateTime DueDate)
+        public TaskBL AddTask(string email, string BoardName, string title, string description, DateTime DueDate, string JWT)
         {
             log.Info($"Attempting to add task to board: {BoardName} for user: {email}");
 
@@ -560,7 +613,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"AddTask failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"AddTask failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Check if any of the input parameters are null or empty
             if (BoardName == null || title == null || title.Length > 50 || (description != null && description.Length > 300) || BoardName == "" || title == "" || DueDate==null)
             {
@@ -613,7 +671,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         /// <param name="Limit">The limit to set for the number of tasks in the column (must be greater than or equal to 0).</param>
         /// <returns>Returns the ColumnBL object representing the column with the updated limit.</returns>
         /// <exception cref="Exception">Thrown when user does not exist, board does not exist, column ordinal is invalid, limit is negative, or there are already more tasks in the column than the new limit.</exception>
-        internal ColumnBL LimitColumn(string email, string BoardName, int ColumnOrdinal, int Limit)
+        internal ColumnBL LimitColumn(string email, string BoardName, int ColumnOrdinal, int Limit, string JWT)
         {
             log.Info($"Attempting to limit column: {ColumnOrdinal} on board: {BoardName} for user: {email}");
             if (!DoesUserExist(email))
@@ -621,7 +679,12 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 log.Error($"LimitColumn failed for user: {email}. Reason: No such user.");
                 throw new Exception("No such user.");
             }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"LimitColumn failed for user: {email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
 
+            }
             // Check if any of the input parameters are null or empty
             if (BoardName == null ||  BoardName == "" || ColumnOrdinal <0 || ColumnOrdinal > 2 || Limit < 0)
             {
@@ -709,12 +772,18 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return ans;
         }
 
-        internal BoardBL JoinBoard(String Email, int boardID)
+        internal BoardBL JoinBoard(String Email, int boardID, string JWT)
         {
             if (!DoesUserExist(Email))
             {
                 log.Error($"CreateBoard failed for user: {Email}. Reason: No such user.");
                 throw new Exception("No such user.");
+            }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"JoinBoard failed for user: {Email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
+
             }
             if (!boardsByID.ContainsKey(boardID))
             {
@@ -740,12 +809,18 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             target.users = target.users;
             return target;
         }
-        internal BoardBL LeaveBoard(String Email, int boardID)
+        internal BoardBL LeaveBoard(String Email, int boardID, string JWT)
         {
             if (!DoesUserExist(Email))
             {
                 log.Error($"CreateBoard failed for user: {Email}. Reason: No such user.");
                 throw new Exception("No such user.");
+            }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"LeaveBoard failed for user: {Email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
+
             }
             if (!boardsByID.ContainsKey(boardID))
             {
@@ -777,12 +852,18 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return null;
         }
 
-        internal List<int> GetUserBoards(String Email) 
+        internal List<int> GetUserBoards(String Email, string JWT) 
         {
             if (!DoesUserExist(Email))
             {
                 log.Error($"getUserBoards failed for user: {Email}. Reason: No such user.");
                 throw new Exception("No such user.");
+            }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"GetUserBoards failed for user: {Email}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
+
             }
             if (boardsPerUser.ContainsKey(Email))
             {
@@ -792,12 +873,18 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return new List<int>();
         }
 
-        internal BoardBL TransferOwnership(String currentOwnerEmail, String NewOwnerEmail, String boardName)
+        internal BoardBL TransferOwnership(String currentOwnerEmail, String NewOwnerEmail, String boardName, string JWT)
         {
             if (!DoesUserExist(currentOwnerEmail))
             {
                 log.Error($"TransferOwnership failed for user: {currentOwnerEmail}. Reason: No such user.");
                 throw new Exception("No such user.");
+            }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"TransferOwnership failed for user: {currentOwnerEmail}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
+
             }
             if (!DoesUserExist(NewOwnerEmail))
             {
@@ -829,12 +916,18 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return b;
         }
 
-        internal TaskBL AssignTask(String oldAssignee, String boardName, int columnOrdinal, int taskID, String NewAssignee)
+        internal TaskBL AssignTask(String oldAssignee, String boardName, int columnOrdinal, int taskID, String NewAssignee, string JWT)
         {
             if (oldAssignee != "" &&!DoesUserExist(oldAssignee))
             {
                 log.Error($"AssignTask failed for user: {oldAssignee}. Reason: No such user.");
                 throw new Exception("No such user.");
+            }
+            if (!ValidateToken(JWT))
+            {
+                log.Error($"AssignTask failed for user: {oldAssignee}. Reason: Invalid token.");
+                throw new Exception("Invalid token.");
+
             }
             if (!DoesUserExist(NewAssignee)) {
                 log.Error($"AssignTask failed for user: {NewAssignee}. Reason: No such user.");
@@ -893,6 +986,34 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             }
             return boardsByID[boardID].BoardName;
         }
-        
+        public bool ValidateToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(secret);
+
+            try
+            {
+                // Validate the token and its claims
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = "kanbanserver.com",
+                    ValidateAudience = true,
+                    ValidAudience = "kanbanapi.com",
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
     }
 }
