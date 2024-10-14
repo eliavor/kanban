@@ -33,7 +33,7 @@ namespace KanBan_2024.ServiceLayer
             try 
             {
                 UserBL user = UF.Register(email, password);
-                Response response = new Response(new UserSL(user.UserEmail), null);
+                Response response = new Response(new UserSL(user.UserEmail, user.JWT), null);
                 return JsonSerializer.Serialize(response);
             }
             catch (Exception ex)

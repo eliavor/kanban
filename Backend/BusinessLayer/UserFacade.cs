@@ -252,10 +252,10 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         public string GenerateToken(string username)
         {
             var claims = new[]
-{
+            {
             new Claim(JwtRegisteredClaimNames.Sub, username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
 
