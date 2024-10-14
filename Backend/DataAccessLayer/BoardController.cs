@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using MySql.Data;
-using MySql.Data.MySqlClient;
 
 internal class BoardController
 {
-    
     private readonly string _connectionString;
 
     internal BoardController()
@@ -15,9 +12,13 @@ internal class BoardController
         // Get the base directory of the tests project
         string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
+        // Adjust the relative path to move from the tests bin directory to the actual database location
+        string path = Path.GetFullPath(Path.Combine(
+         Directory.GetCurrentDirectory(), "kanban.db"));
+
 
         // Set the connection string
-        _connectionString = "Server=kanban.c3wqw4y2yjiu.eu-north-1.rds.amazonaws.com;Database=Kanban;User ID=admin;Password=Oreliav2005;";
+        _connectionString = $"Data Source={path};Version=3;";
     }
 
     // Method to select boards based on given criteria
@@ -34,21 +35,21 @@ internal class BoardController
             query = "SELECT * FROM Board WHERE ";
         }
         List<string> conditions = new List<string>();
-        List<MySqlParameter> parameters = new List<MySqlParameter>();
+        List<SQLiteParameter> parameters = new List<SQLiteParameter>();
         BoardDAO board = null;
 
         foreach (var criterion in criteria)
         {
             conditions.Add($"{criterion.Key} = @{criterion.Key}");
-            parameters.Add(new MySqlParameter($"@{criterion.Key}", criterion.Value));
+            parameters.Add(new SQLiteParameter($"@{criterion.Key}", criterion.Value));
         }
 
         query += string.Join(" AND ", conditions);
 
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 command.Parameters.AddRange(parameters.ToArray());
                 using (var reader = command.ExecuteReader())
@@ -57,11 +58,11 @@ internal class BoardController
                     {
                         string name = reader.GetString(1);
                         int boardID = (int) reader.GetInt64(0);
-                        string owner = reader.GetString(3);
+                        string owner = reader.GetString(5);
                         List<string> userForBoard = GetUsersForBoard((int)reader.GetInt64(0));
                         List<ColumnDAO> columns = GetColumnsForBoard((int)reader.GetInt64(0),
-                            (int)reader.GetInt64(4), (int)reader.GetInt64(5),
-                            (int)reader.GetInt64(6));
+                            (int)reader.GetInt64(2), (int)reader.GetInt64(3),
+                            (int)reader.GetInt64(4));
                         
 
                         board = new BoardDAO(
@@ -94,20 +95,20 @@ internal class BoardController
         }
 
         string query = "DELETE FROM Board WHERE BoardId = @BoardId";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@BoardId", boardId);
                 command.ExecuteNonQuery();
             }
         }
         string query2 = "DELETE FROM UserBoard WHERE BoardId = @BoardId";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query2, connection))
+            using (var command = new SQLiteCommand(query2, connection))
             {
                 command.Parameters.AddWithValue("@BoardId", boardId);
                 command.ExecuteNonQuery();
@@ -123,10 +124,10 @@ internal class BoardController
         string query = @"INSERT INTO Board (BoardId, BoardName, BackLogLimit, InProgressLimit, DoneLimit, OwnerEmail, LastTaskId) 
                          VALUES (@BoardId, @BoardName, @BackLogLimit, @InProgressLimit, @DoneLimit, @OwnerEmail, @LastTaskId)";
 
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using var command = new MySqlCommand(query, connection);
+            using var command = new SQLiteCommand(query, connection);
             command.Parameters.AddWithValue("@BoardId", board.BoardId);
             command.Parameters.AddWithValue("@BoardName", board.BoardName);
             command.Parameters.AddWithValue("@BackLogLimit", board.Columns[0].Limit);
@@ -140,10 +141,10 @@ internal class BoardController
         string query2 = @"INSERT INTO UserBoard (BoardId, UserEmail) Values (@BoardId, @UserEmail)";
         foreach (string user in board.Users)
         {
-            using (var connection = new MySqlConnection(_connectionString))
+            using (var connection = new SQLiteConnection(_connectionString))
             {
                 connection.Open();
-                using var command = new MySqlCommand(query2, connection);
+                using var command = new SQLiteCommand(query2, connection);
                 command.Parameters.AddWithValue("@BoardId", board.BoardId);
                 command.Parameters.AddWithValue("@UserEmail", user);
                 command.ExecuteNonQuery ();
@@ -157,7 +158,7 @@ internal class BoardController
     {
         string query = "UPDATE Board SET ";
         List<string> setClauses = new List<string>();
-        List<MySqlParameter> parameters = new List<MySqlParameter>();
+        List<SQLiteParameter> parameters = new List<SQLiteParameter>();
 
         // Check if "Users" update is present
         if (updates.ContainsKey("UserEmail"))
@@ -167,10 +168,10 @@ internal class BoardController
 
             // Delete existing entries for the boardId in Board-User table
             string deleteQuery = "DELETE FROM UserBoard WHERE BoardId = @BoardId";
-            using (var connection = new MySqlConnection(_connectionString))
+            using (var connection = new SQLiteConnection(_connectionString))
             {
                 connection.Open();
-                using var deleteCommand = new MySqlCommand(deleteQuery, connection);
+                using var deleteCommand = new SQLiteCommand(deleteQuery, connection);
                 deleteCommand.Parameters.AddWithValue("@BoardId", boardId);
                 deleteCommand.ExecuteNonQuery();
             }
@@ -179,10 +180,10 @@ internal class BoardController
             string insertQuery = @"INSERT INTO UserBoard (BoardId, UserEmail) VALUES (@BoardId, @UserEmail)";
             foreach (string user in users)
             {
-                using (var connection = new MySqlConnection(_connectionString))
+                using (var connection = new SQLiteConnection(_connectionString))
                 {
                     connection.Open();
-                    using var insertCommand = new MySqlCommand(insertQuery, connection);
+                    using var insertCommand = new SQLiteCommand(insertQuery, connection);
                     insertCommand.Parameters.AddWithValue("@BoardId", boardId);
                     insertCommand.Parameters.AddWithValue("@UserEmail", user);
                     insertCommand.ExecuteNonQuery();
@@ -198,7 +199,7 @@ internal class BoardController
         foreach (var update in updates)
         {
             setClauses.Add($"{update.Key} = @{update.Key}");
-            parameters.Add(new MySqlParameter($"@{update.Key}", update.Value));
+            parameters.Add(new SQLiteParameter($"@{update.Key}", update.Value));
             flag = false;
         }
         if (!flag)
@@ -206,13 +207,13 @@ internal class BoardController
             // Complete the main update query for Board table
             query += string.Join(", ", setClauses);
             query += " WHERE BoardId = @BoardId";
-            parameters.Add(new MySqlParameter("@BoardId", boardId));
+            parameters.Add(new SQLiteParameter("@BoardId", boardId));
 
             // Execute the update query for Board table
-            using (var connection = new MySqlConnection(_connectionString))
+            using (var connection = new SQLiteConnection(_connectionString))
             {
                 connection.Open();
-                using (var command = new MySqlCommand(query, connection))
+                using (var command = new SQLiteCommand(query, connection))
                 {
                     command.Parameters.AddRange(parameters.ToArray());
                     command.ExecuteNonQuery();
@@ -229,10 +230,10 @@ internal class BoardController
     {
         List<string> users = new List<string>();
         string query = "SELECT UserEmail FROM  UserBoard WHERE BoardId = @BoardId";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@BoardId", boardId);
                 using (var reader = command.ExecuteReader())
@@ -264,10 +265,10 @@ internal class BoardController
     {
         List<TaskDAO> tasks = new List<TaskDAO>();
         string query = "SELECT * FROM Task WHERE BoardId = @BoardId AND ColumnOrdinal = @ColumnOrdinal";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@BoardId", boardId);
                 command.Parameters.AddWithValue("@ColumnOrdinal", columnOrdinal);
@@ -301,10 +302,10 @@ internal class BoardController
     private void DeleteBoardTasks(int boardId)
     {
         string query = "DELETE FROM Task WHERE BoardId = @BoardId";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@BoardId", boardId);
                 command.ExecuteNonQuery();
@@ -314,20 +315,20 @@ internal class BoardController
     internal void DeleteAll()
     {
         string query = "DELETE FROM Board";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 try { command.ExecuteNonQuery(); }
                 catch (Exception ex) { }
             }
         }
         string query2 = "DELETE FROM UserBoard";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query2, connection))
+            using (var command = new SQLiteCommand(query2, connection))
             {
                 try { command.ExecuteNonQuery(); }
                 catch (Exception ex) { }

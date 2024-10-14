@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
-using MySql.Data;
-using MySql.Data.MySqlClient;
 
 internal class TaskController
 {
@@ -10,9 +9,15 @@ internal class TaskController
 
 	internal TaskController()
 	{
+        // Get the base directory of the tests project
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+        // Adjust the relative path to move from the tests bin directory to the actual database location
+        string path = Path.GetFullPath(Path.Combine(
+         Directory.GetCurrentDirectory(), "kanban.db"));
 
         // Set the connection string
-        _connectionString = "Server=kanban.c3wqw4y2yjiu.eu-north-1.rds.amazonaws.com;Database=Kanban;User ID=admin;Password=Oreliav2005;";
+        _connectionString = $"Data Source={path};Version=3;";
     }
 
 	// Method to select tasks based on given criteria
@@ -29,20 +34,20 @@ internal class TaskController
             query = "SELECT * FROM Task WHERE ";
         }
         List<string> conditions = new List<string>();
-		List<MySqlParameter> parameters = new List<MySqlParameter>();
+		List<SQLiteParameter> parameters = new List<SQLiteParameter>();
 
 		foreach (var criterion in criteria)
 		{
 			conditions.Add($"{criterion.Key} = @{criterion.Key}");
-			parameters.Add(new MySqlParameter($"@{criterion.Key}", criterion.Value));
+			parameters.Add(new SQLiteParameter($"@{criterion.Key}", criterion.Value));
 		}
 
 		query += string.Join(" AND ", conditions);
 
-		using (var connection = new MySqlConnection(_connectionString))
+		using (var connection = new SQLiteConnection(_connectionString))
 		{
 			connection.Open();
-			using (var command = new MySqlCommand(query, connection))
+			using (var command = new SQLiteCommand(query, connection))
 			{
 				command.Parameters.AddRange(parameters.ToArray());
 				using (var reader = command.ExecuteReader())
@@ -78,10 +83,10 @@ internal class TaskController
 		}
 
 		string query = "DELETE FROM Task WHERE TaskId = @TaskId";
-		using (var connection = new MySqlConnection(_connectionString))
+		using (var connection = new SQLiteConnection(_connectionString))
 		{
 			connection.Open();
-			using (var command = new MySqlCommand(query, connection))
+			using (var command = new SQLiteCommand(query, connection))
 			{
 				command.Parameters.AddWithValue("@TaskId", taskId);
 				command.ExecuteNonQuery();
@@ -97,10 +102,10 @@ internal class TaskController
 		string query = @"INSERT INTO Task (Title, CreationDate, DueDate, Description, AssigneeEmail, BoardId, ColumnOrdinal, TaskId) 
                          VALUES (@Title, @CreationDate, @DueDate, @Description, @AssigneeEmail, @BoardId, @ColumnOrdinal, @TaskId)";
 
-		using (var connection = new MySqlConnection(_connectionString))
+		using (var connection = new SQLiteConnection(_connectionString))
 		{
 			connection.Open();
-			using (var command = new MySqlCommand(query, connection))
+			using (var command = new SQLiteCommand(query, connection))
 			{
 				command.Parameters.AddWithValue("@Title", task.Title);
 				command.Parameters.AddWithValue("@CreationDate", task.CreationDate.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -123,24 +128,24 @@ internal class TaskController
 	{
 		string query = "UPDATE Task SET ";
 		List<string> setClauses = new List<string>();
-		List<MySqlParameter> parameters = new List<MySqlParameter>();
+		List<SQLiteParameter> parameters = new List<SQLiteParameter>();
 
 		foreach (var update in updates)
 		{
 			setClauses.Add($"{update.Key} = @{update.Key}");
-			parameters.Add(new MySqlParameter($"@{update.Key}", update.Value));
+			parameters.Add(new SQLiteParameter($"@{update.Key}", update.Value));
 		}
 
 		query += string.Join(", ", setClauses);
 		query += " WHERE TaskId = @TaskId";
-		parameters.Add(new MySqlParameter("@TaskId", taskId));
+		parameters.Add(new SQLiteParameter("@TaskId", taskId));
 		query+= " AND BoardId = @BoardId";
-		parameters.Add(new MySqlParameter("@BoardId", boardId));
+		parameters.Add(new SQLiteParameter("@BoardId", boardId));
 
-		using (var connection = new MySqlConnection(_connectionString))
+		using (var connection = new SQLiteConnection(_connectionString))
 		{
 			connection.Open();
-			using (var command = new MySqlCommand(query, connection))
+			using (var command = new SQLiteCommand(query, connection))
 			{
 				command.Parameters.AddRange(parameters.ToArray());
 				command.ExecuteNonQuery();
@@ -155,10 +160,10 @@ internal class TaskController
 	{
 		UserDAO user = null;
 		string query = "SELECT * FROM User WHERE Email = @Email";
-		using (var connection = new MySqlConnection(_connectionString))
+		using (var connection = new SQLiteConnection(_connectionString))
 		{
 			connection.Open();
-			using (var command = new MySqlCommand(query, connection))
+			using (var command = new SQLiteCommand(query, connection))
 			{
 				command.Parameters.AddWithValue("@Email", email);
 				using (var reader = command.ExecuteReader())
@@ -178,10 +183,10 @@ internal class TaskController
 	{
 		TaskDAO task = null;
 		string query = "SELECT * FROM Task WHERE TaskId = @TaskId AND BoardId=@BoardId";
-		using (var connection = new MySqlConnection(_connectionString))
+		using (var connection = new SQLiteConnection(_connectionString))
 		{
 			connection.Open();
-			using (var command = new MySqlCommand(query, connection))
+			using (var command = new SQLiteCommand(query, connection))
 			{
 				command.Parameters.AddWithValue("@TaskId", taskId);
 				command.Parameters.AddWithValue("@BoardId", boardId);
@@ -208,10 +213,10 @@ internal class TaskController
     internal void DeleteAll()
     {
         string query = "DELETE FROM Task";
-        using (var connection = new MySqlConnection(_connectionString))
+        using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
-            using (var command = new MySqlCommand(query, connection))
+            using (var command = new SQLiteCommand(query, connection))
             {
                 try { command.ExecuteNonQuery(); }
                 catch (Exception ex) { }
