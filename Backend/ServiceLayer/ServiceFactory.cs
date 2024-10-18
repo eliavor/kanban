@@ -40,5 +40,6 @@ namespace KanBan_2024.ServiceLayer
             US.DeleteData();
             BS.DeleteData();
         }
+
     }
 }

@@ -150,13 +150,13 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             }
 
             // Check if the user is already logged in
-            if (CheckLoggedIn(Email))
-            {
-                log.Error($"Login failed for user with email: {Email}. Reason: User already logged in.");
-                throw new Exception("User already logged in.");
-            }
+            //if (CheckLoggedIn(Email))
+            //{
+            //    log.Error($"Login failed for user with email: {Email}. Reason: User already logged in.");
+            //    throw new Exception("User already logged in.");
+            //}
 
-            // Validate the password
+            // Validate the passwor d
             UserBL user = users[Email];
             if (!user.password.Equals(Password))
             {

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasky</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Welcome to Tasky</h1>
+    <p>Type your email and a desired password to register. click <a href="login.html">here</a> to login.</p>
+
+    <form id = "register-form">
+        <label for="email">Email:</label><br>
+        <input type="email" id="email_input" name="email" required><br><br>
+
+        <label for="password">Password:</label><br>
+        <input type="text" id="password_input" name="password" required><br><br>
+
+        <label id="msg"></label><br><br>
+
+        <button type="submit" id = "btn">Submit</button>
+    </form>
+    <script src="register.js"></script>
+</body>
+</html>

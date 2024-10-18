@@ -80,6 +80,14 @@ namespace API.Controllers
         }
 
 
+        // GET: BoardController/getUserBoards
+        [HttpGet("getUserBoards")]
+        public ActionResult GetUserBoards([FromQuery] string email, [FromQuery] string JWT)
+        {
+            var response = _serviceFactory.BS.GetUserBoards(email, JWT);
+            return Content(response, "application/json");
+        }
+
 
         // GET: BoardController/getBoardName
         [HttpGet("getBoardName")]
