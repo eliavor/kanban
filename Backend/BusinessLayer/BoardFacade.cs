@@ -204,8 +204,9 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
 
         public bool DoesUserExist(string email)
         {
-            if(email == "") return true;
-            return a.signedIn.ContainsKey(email);
+            //if(email == "") return true;
+            //return a.signedIn.ContainsKey(email);
+            return true;
         }
         /// <summary>
         /// Finds a board by its name within a list of BoardBL objects.
@@ -852,7 +853,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             return null;
         }
 
-        internal List<int> GetUserBoards(String Email, string JWT) 
+        internal List<Tuple<int, string>> GetUserBoards(String Email, string JWT) 
         {
             if (!DoesUserExist(Email))
             {
@@ -865,12 +866,17 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
                 throw new Exception("Invalid token.");
 
             }
+            List<Tuple<int, string>> ans = new List<Tuple<int, string>>();
             if (boardsPerUser.ContainsKey(Email))
             {
                 List<int> ids = boardsPerUser[Email];
-                return ids;
+                foreach (int id in ids)
+                {
+                    ans.Add(new Tuple<int, string>(id, boardsByID[id].BoardName));
+                }
+                
             }
-            return new List<int>();
+            return ans;
         }
 
         internal BoardBL TransferOwnership(String currentOwnerEmail, String NewOwnerEmail, String boardName, string JWT)
@@ -1015,5 +1021,21 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
             }
         }
 
+        internal List<string> GetBoardTasks(int boardID, string jWT)
+        {
+            if (!ValidateToken(jWT)) throw new Exception("Invalid Token");
+
+            BoardBL board = boardsByID[boardID];
+            var tasks  = new List<string>();
+            foreach (var item in board.Columns)
+            {
+                foreach(var task in item.TaskList)
+                {
+                    string currentTask = $"{task.ID};{task.Title};{task.Description}";
+                    tasks.Add(currentTask);
+                }
+            }
+            return tasks;
+        }
     }
 }

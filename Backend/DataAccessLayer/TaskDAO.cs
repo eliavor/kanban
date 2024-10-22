@@ -90,6 +90,24 @@ internal class TaskDAO
         Controller = new TaskController();
         
     }
+
+    public TaskDAO(int taskId, string title, string assignee, DateTime creationDate, DateTime dueDate, string description, int boardId, int columnOrdinal, bool isPersisted)
+    {
+        isPersist = true;
+        Controller = new TaskController();
+        TaskId = taskId;
+        Title = title;
+        Assignee = assignee;
+        CreationDate = creationDate;
+        DueDate = dueDate;
+        Description = description;
+        BoardId = boardId;
+        ColumnOrdinal = columnOrdinal;
+        
+        
+    }
+
+
     internal void persist()
     {
         if(!isPersist)

@@ -319,7 +319,21 @@ namespace KanBan_2024.ServiceLayer
         {
             try
             {
-                List<int> boards = BF.GetUserBoards(email, JWT);
+                List<Tuple<int, string>> boards = BF.GetUserBoards(email, JWT);
+                Response response = new Response(boards, null);
+                return JsonSerializer.Serialize(response);
+            }
+            catch (Exception ex)
+            {
+                return JsonSerializer.Serialize(new Response(null, ex.Message));
+            }
+        }
+
+        public string GetBoardTasks(int boardID, string JWT)
+        {
+            try
+            {
+                List<string> boards = BF.GetBoardTasks(boardID, JWT);
                 Response response = new Response(boards, null);
                 return JsonSerializer.Serialize(response);
             }

@@ -89,6 +89,14 @@ namespace API.Controllers
         }
 
 
+        // GET: BoardController/getBoardTasks
+        [HttpGet("getBoardTasks")]
+        public ActionResult GetBoardTasks([FromQuery] int boardID, [FromQuery] string JWT)
+        {
+            var response = _serviceFactory.BS.GetBoardTasks(boardID, JWT);
+            return Content(response, "application/json");   
+        }
+
         // GET: BoardController/getBoardName
         [HttpGet("getBoardName")]
         public ActionResult GetBoardName([FromQuery] int boardId)

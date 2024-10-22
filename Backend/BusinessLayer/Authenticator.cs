@@ -20,7 +20,7 @@ namespace IntroSE.Kanban.Backend.BusinessLayer
         /// <param name="user">The UserBL object representing the user to sign in.</param>
         internal void SignIn(string email, UserBL user)
         {
-            signedIn.Add(email, user);
+            //signedIn.Add(email, user);
         }
 
         /// <summary>

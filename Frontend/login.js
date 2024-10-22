@@ -10,8 +10,10 @@ function OnSubmit(e){
 
     if(emailInput.value === '' || passwordInput.value === ''){
         msg.innerHTML = '<label id="msg">Please make sure to fill all fields.</label>';
+        setTimeout(() => msg.innerHTML = "", 3000)
     }
     else{
+        localStorage.clear()
         msg.innerHTML = '<label id="msg"></label>';
         console.log(`email is:  + ${emailInput.value}`);
         console.log(`password is:  ${passwordInput.value}`);
@@ -30,9 +32,11 @@ function OnSubmit(e){
             body:JSON.stringify(data)
         })
         .then(res => res.json())
-        .then(data => keepToken(data));
+        .then(data => keepToken(data)).catch(error => console.error(error));
 
-        window.location.href = "home.html";
+        localStorage.setItem('email', emailInput.value);
+
+        
     }
 }
 
@@ -41,8 +45,10 @@ function keepToken(data){
         const jwt = data.ReturnValue.JWT;
         console.log(jwt);
         localStorage.setItem('jwt', jwt);
+        window.location.href = "home.html";
     }
     else{
         console.log(data.ErrorMessage);
+        localStorage.setItem('error',data);
     }
 }

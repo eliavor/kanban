@@ -284,7 +284,8 @@ internal class BoardController
                             DateTime.Parse(reader.GetString(3)),
                             reader.GetString(4),
                             reader.GetInt16(6),
-                            reader.GetInt16(7)
+                            reader.GetInt16(7),
+                            true
                         );
                         tasks.Add(task);
                     }
