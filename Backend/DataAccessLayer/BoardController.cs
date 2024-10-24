@@ -49,6 +49,12 @@ internal class BoardController
         using (var connection = new SQLiteConnection(_connectionString))
         {
             connection.Open();
+
+            using (var command = new SQLiteCommand("PRAGMA journal_mode=WAL;", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
             using (var command = new SQLiteCommand(query, connection))
             {
                 command.Parameters.AddRange(parameters.ToArray());

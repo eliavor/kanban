@@ -39,3 +39,69 @@ li {
 li:hover {
     background-color: #b5b5b5; /* Darker gray when hovering */
 }
+button {
+    background-color: #4d4d4d; /* Medium gray for button background */
+    color: #fff; /* White text color */
+    font-size: 1.1em; /* Similar font size as list items */
+    padding: 10px 20px; /* Padding to make the button clickable and match other elements */
+    margin-top: 10px;
+    margin-right: 30px;
+    margin-left: 30px;
+    border: none; /* Remove default borders */
+    border-radius: 8px; /* Rounded corners to match the list items */
+    cursor: pointer; /* Pointer cursor to indicate it's clickable */
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+
+/* Change background color of buttons on hover */
+button:hover {
+    background-color: #333; /* Darker gray when hovering */
+}
+
+/* Optional: Disabled button styling */
+button:disabled {
+    background-color: #b5b5b5; /* Light gray when disabled */
+    cursor: not-allowed; /* Show not-allowed cursor for disabled button */
+}
+
+input, textarea {
+    font-family: Arial, sans-serif; /* Match font with the rest of the elements */
+    font-size: 1.1em; /* Similar font size as other elements */
+    padding: 10px; /* Padding for a comfortable input area */
+    margin: 10px 0; /* Space between inputs */
+    border: 2px solid #d1d1d1; /* Light gray border */
+    border-radius: 8px; /* Rounded corners for consistency */
+    background-color: #f5f5f5; /* Light background for the input field */
+    color: #333; /* Dark gray text color */
+    width: 100%; /* Full width input field */
+    box-sizing: border-box; /* Ensure padding doesn’t affect width */
+    transition: border-color 0.3s ease; /* Smooth transition on focus */
+}
+
+/* Focus state for inputs (when clicked) */
+input:focus, textarea:focus {
+    border-color: #4d4d4d; /* Darker gray border on focus */
+    outline: none; /* Remove default focus outline */
+}
+
+/* Styling the textarea for a consistent look */
+textarea {
+    resize: vertical; /* Allow vertical resizing only */
+    height: 150px; /* Set a default height */
+}
+
+/* Optional: Date input styling */
+input[type="datetime-local"] {
+    padding: 10px; /* Add padding for date input */
+    font-size: 1.1em;
+    border-radius: 8px;
+    border: 2px solid #d1d1d1;
+    background-color: #f5f5f5;
+    transition: border-color 0.3s ease;
+}
+
+/* Optional: Disabled input styling */
+input:disabled, textarea:disabled {
+    background-color: #e0e0e0; /* Slightly darker background when disabled */
+    cursor: not-allowed; /* Not-allowed cursor for disabled inputs */
+}
